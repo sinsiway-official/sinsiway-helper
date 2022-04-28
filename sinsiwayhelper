@@ -28,12 +28,11 @@ initialize() {
 }
 
 showUsage() {
-    echo "usage: ${binary} [options] [args]"
+    echo "usage: ${binary} <subcommand>"
     echo "Type '${binary} --version' to see the program version"
     echo
-    echo "Availiable subcommands:"
+    echo "Availiable subcommand:"
     echo "  help"
-    echo
     echo "  storage                 : shows a list of storage"
     echo "  branches <storage>      : shows a list of brnaches"
     echo "  tags <storage>          : shows a list of tags"
@@ -214,7 +213,7 @@ checkoutTags() {
 main() {
     initialize
 
-    [ $# -lt "1" ] && echo "Type '${binary} help' for usage." && exit 1
+    [ $# -lt "1" ] && echo && echo "Type '${binary} help' for usage." && echo && exit 1
     [ $1 = "--version" ] && showVersion && exit 1
     [ $1 = "help" ] && showUsage && exit 1
     [ $1 = "storage" ] && showStorage && exit 1
@@ -223,9 +222,7 @@ main() {
     [ $1 = "checkout-branches" ] && checkoutBranches $2 $3 $4 && exit 1
     [ $1 = "checkout-tags" ] && checkoutTags $2 $3 $4 && exit 1
 
-    # showRepositoryInfo
-    # showRepositoryDirectory
-
+    echo && echo "unknown <subcommand> '$1'" && echo && echo "Type '${binary} help' for usage." && echo && exit 1
 }
 
 main $@
