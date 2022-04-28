@@ -33,12 +33,12 @@ showUsage() {
     echo
     echo "Availiable subcommand:"
     echo "  help"
-    echo "  storage                 : shows a list of storage"
-    echo "  branches <storage>      : shows a list of brnaches"
-    echo "  tags <storage>          : shows a list of tags"
+    echo "  list storage, list"
+    echo "  list branch <storage>"
+    echo "  list tag <storage>"
     echo
-    echo "  checkout-branches <storage> <branch> [<checkout directory>]"
-    echo "  checkout-tag <storage> <tag> [<checkout directory>]"
+    echo "  checkout <storage> brunch <branch> [<checkout directory>]"
+    echo "  checkout <storage> tag <tag> [<checkout directory>]"
     echo
 }
 
@@ -214,13 +214,14 @@ main() {
     initialize
 
     [ $# -lt "1" ] && echo && echo "Type '${binary} help' for usage." && echo && exit 1
-    [ $1 = "--version" ] && showVersion && exit 1
-    [ $1 = "help" ] && showUsage && exit 1
-    [ $1 = "storage" ] && showStorage && exit 1
-    [ $1 = "branches" ] && showBranches $2 && exit 1
-    [ $1 = "tags" ] && showTags $2 && exit 1
-    [ $1 = "checkout-branches" ] && checkoutBranches $2 $3 $4 && exit 1
-    [ $1 = "checkout-tags" ] && checkoutTags $2 $3 $4 && exit 1
+    [ $1 = "--version" ] && showVersion && exit 0
+    [ $1 = "help" ] && showUsage && exit 0
+    [ $1 = "list" && $2 = "storage" ] && showStorage && exit 0
+    [ $1 = "list" && $2 = "branch" ] && showBranches $2 && exit 0
+    [ $1 = "list" && $2 = "tag" ] && showTags $2 && exit 0
+    [ $1 = "list" ] && showStorage && exit 0
+    [ $1 = "checkout" && $3 = "branch" ] && checkoutBranches $2 $4 $5 && exit 0
+    [ $1 = "checkout" && $3 = "tag" ] && checkoutTags $2 $4 $5 && exit 0
 
     echo && echo "unknown <subcommand> '$1'" && echo && echo "Type '${binary} help' for usage." && echo && exit 1
 }
