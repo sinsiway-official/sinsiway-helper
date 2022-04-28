@@ -1,0 +1,231 @@
+#!/bin/sh
+
+#DgMain                       : dgriffin
+#DgAdmin                      : dgriffin ui source
+#DevDoc                       : Petra V3.1 개발문서
+#petra                        : petraV3.1
+#petra-v4.1.0                 : 현재 사용중
+#cipher_doc-v4.1.0            : petra cipher V3.2 cc 인증 문서
+#petra_patchscript-v4.1.0     : petra v4.1 patch script
+#cipher_nhbank-v3.1.0         : 농협은행 지원 용 petra cipher v3.1 소스코드
+#mac_client-v4.1.0            : mac용 클라이언트 소스코드
+#petra-v5.0                   : petra cloud 팀이 사용 예정인듯
+#petra-v5.0-webui             : petra cloud ui 팀이 사용 예정인듯
+#petra_tools-v4.1.0           : 이기종 os petra tools
+#cipher_ui                    : 레거시 ui 팀 소스코드
+#qa_release_test              : 품질관리 테스트 소스코드
+#petra_modules                : PetraCrypto V1.0 암호모듈 인증 저장소
+
+initialize() {
+    binary=$(basename "$0")
+    version="1.0.0"
+    dateCreated="April 28 2022"
+
+    svn_exe=$(which svn)
+    [ ! -f "${svn_exe}" ] && echo "not found [svn] file"
+
+    svnBaseUrl="http://192.168.10.98"
+}
+
+showUsage() {
+    echo "usage: ${binary} [options] [args]"
+    echo "Type '${binary} --version' to see the program version"
+    echo
+    echo "Availiable subcommands:"
+    echo "  help"
+    echo
+    echo "  storage                 : shows a list of storage"
+    echo "  branches <storage>      : shows a list of brnaches"
+    echo "  tags <storage>          : shows a list of tags"
+    echo
+    echo "  checkout-branches <storage> <branch> [<checkout directory>]"
+    echo "  checkout-tag <storage> <tag> [<checkout directory>]"
+    echo
+}
+
+showVersion() {
+    echo "${binary},  version ${version}"
+    echo "          compiled ${dateCreated}"
+    echo ""
+}
+
+showStorage() {
+    echo "storage"
+    echo "=========="
+    echo "petra3                : petra v3.1 source, svn storage [petra]"
+    echo "petra4                : petra v4.1.0 source, svn storage [petra-v4.1.0]"
+    echo "petra5                : petra v5 for cloud, svn storage [petra-v5.0]"
+    echo
+    echo "cipher-nhbank         : petra cipher v3.1 for nhbank source, svn storage [cipher_nhbank-v3.1.0]"
+    echo "petra-cipher-cc       : petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_cc]"
+    echo "petra-cipher-gs       : petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_gs]"
+    echo "petra-file-cipher-gs  : petra cipher v3.2 cc source, svn storage [petra_file_cipher_v3.2_gs]"
+    echo
+}
+
+getStorageUrl() {
+    local storageName=$1
+    [ ${storageName} = "petra3" ] && echo ${svnBaseUrl}/petra
+    [ ${storageName} = "petra4" ] && echo ${svnBaseUrl}/petra-v4.1.0
+    [ ${storageName} = "petra5" ] && echo ${svnBaseUrl}/petra-v5.0
+    [ ${storageName} = "cipher-nhbank" ] && echo ${svnBaseUrl}/cipher_nhbank-v3.1.0
+    [ ${storageName} = "petra-cipher-cc" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_cc
+    [ ${storageName} = "petra-cipher-gs" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_gs
+    [ ${storageName} = "petra-file-cipher-gs" ] && echo ${svnBaseUrl}/petra_file_cipher_v3.2_gs
+}
+
+showBranches() {
+    local storageUrl=$(getStorageUrl $1)
+    $svn_exe info ${storageUrl}
+    echo "branches"
+    echo "=========="
+    $svn_exe list ${storageUrl}/branches
+    echo
+}
+
+showTags() {
+    local storageUrl=$(getStorageUrl $1)
+    $svn_exe info ${storageUrl}
+    echo "tags"
+    echo "=========="
+    $svn_exe list ${storageUrl}/branches
+    echo
+}
+
+showStroageDirectory() {
+    [ $# -ne "1" ] && showStorage && return
+    local storageName=$1
+
+    for storage in ${storageList}; do
+        [ ${storage} = ${storageName} ] && showStorageDirectory ${storageName} && break
+    done
+
+}
+
+checkoutBranches() {
+    local storageName=$1
+    local branchName=$2
+    local checkoutDirectory=$3
+    [ -z ${storageName} ] && echo "<storage> is null" && exit 1
+    [ -z ${branchName} ] && echo "<branch> is null" && exit 1
+    [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}-${branchName}
+
+    local checkoutDirectoryPath=$(pwd)/${checkoutDirectory}
+    local storageUrl=$(getStorageUrl $1)
+    local checkoutUrl=${storageUrl}/branches/${branchName}
+
+    ${svn_exe} info ${checkoutUrl}
+
+    [ -d "${checkoutDirectoryPath}" ] && printf "initialize directory [${checkoutDirectoryPath}].. " && rm -rf ${checkoutDirectoryPath}
+    [ ! -d "${checkoutDirectoryPath}" ] && mkdir ${checkoutDirectoryPath}
+
+    if [ -d "${checkoutDirectoryPath}" ]; then
+        echo "[OK]"
+    else
+        echo "[Error]" && exit 1
+    fi
+
+    echo "checkout in ${checkoutDirectoryPath}... "
+    ${svn_exe} checkout ${checkoutUrl} ${checkoutDirectoryPath}/src
+
+    cd ${checkoutDirectoryPath}
+    mkdir bin config install lib script
+
+    cd ${checkoutDirectoryPath}/install
+    [ -d ../src/installer/lib ] && ln -s ../src/installer/lib lib
+    [ -d ../src/installer/templates ] && ln -s ../src/installer/templates templates
+    [ ! -d log/ ] && mkdir log
+
+    cd ${checkoutDirectoryPath}/bin
+    ln -s ../install/lib/petra_config patra_config
+    ln -s ../install/lib/petractl
+
+    cd ${checkoutDirectoryPath}
+    genSystemScript
+    echo
+    echo "ok! successfully."
+    echo
+
+}
+
+genSystemScript() {
+    env_file=env.sh
+    echo '#' >$env_file
+    echo '# env.sh' >>$env_file
+    echo '#' >>$env_file
+    echo '# Environments for dgriffin' >>$env_file
+    echo '#' >>$env_file
+    echo 'SOHA_HOME=`pwd`' >>$env_file
+    echo 'SOHA_SVC=demo' >>$env_file
+    echo 'export SOHA_HOME SOHA_SVC' >>$env_file
+    echo '' >>$env_file
+    echo 'sys_name=`uname -s`' >>$env_file
+    echo 'case ${sys_name} in' >>$env_file
+    echo '  AIX)' >>$env_file
+    echo '       LIBPATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export LIBPATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo '  HP-UX)' >>$env_file
+    echo '       SHLIB_PATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export SHLIB_PATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo '  Linux)' >>$env_file
+    echo '       LD_LIBRARY_PATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export LD_LIBRARY_PATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo '  *)' >>$env_file
+    echo '       LD_LIBRARY_PATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export LD_LIBRARY_PATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo 'esac' >>$env_file
+    echo '' >>$env_file
+    chmod 755 $env_file
+}
+
+checkoutTags() {
+    local storageName=$1
+    local tagName=$2
+    local checkoutDirectory=$3
+    [ -z ${storageName} ] && echo "<storage> is null" && exit 1
+    [ -z ${tagName} ] && echo "<branch> is null" && exit 1
+    [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}-${tagName}
+
+    local storageUrl=$(getStorageUrl $1)
+    local checkoutUrl=${storageUrl}/branches/${tagName}
+
+    ${svn_exe} info ${checkoutUrl}
+
+    [ -d "${checkoutDirectory}" ] && printf "initialize directory ${checkoutDirectory}.. " && rm -rf ${checkoutDirectory}
+    mkdir ${checkoutDirectory}
+
+    if [ -d "${checkoutDirectory}" ]; then
+        echo "[OK]"
+    else
+        echo "[Error]" && exit 1
+    fi
+
+    echo "checkout in ${checkoutDirectory}... "
+    ${svn_exe} checkout ${checkoutUrl} ${checkoutDirectory}/src
+
+    cd ${checkoutDirectory}
+    mkdir bin config install lib script
+}
+
+main() {
+    initialize
+
+    [ $# -lt "1" ] && echo "Type '${binary} help' for usage." && exit 1
+    [ $1 = "--version" ] && showVersion && exit 1
+    [ $1 = "help" ] && showUsage && exit 1
+    [ $1 = "storage" ] && showStorage && exit 1
+    [ $1 = "branches" ] && showBranches $2 && exit 1
+    [ $1 = "tags" ] && showTags $2 && exit 1
+    [ $1 = "checkout-branches" ] && checkoutBranches $2 $3 $4 && exit 1
+    [ $1 = "checkout-tags" ] && checkoutTags $2 $3 $4 && exit 1
+
+    # showRepositoryInfo
+    # showRepositoryDirectory
+
+}
+
+main $@
