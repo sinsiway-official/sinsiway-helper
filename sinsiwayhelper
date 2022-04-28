@@ -33,9 +33,9 @@ showUsage() {
     echo
     echo "Availiable subcommand:"
     echo "  help"
-    echo "  list storage, list"
-    echo "  list branch <storage>"
-    echo "  list tag <storage>"
+    echo "  list, list storage"
+    echo "  list <storage> branch"
+    echo "  list <storage> tag"
     echo
     echo "  checkout <storage> brunch <branch> [<checkout directory>]"
     echo "  checkout <storage> tag <tag> [<checkout directory>]"
@@ -51,14 +51,13 @@ showVersion() {
 showStorage() {
     echo "storage"
     echo "=========="
-    echo "petra3                : petra v3.1 source, svn storage [petra]"
-    echo "petra4                : petra v4.1.0 source, svn storage [petra-v4.1.0]"
-    echo "petra5                : petra v5 for cloud, svn storage [petra-v5.0]"
-    echo
-    echo "cipher-nhbank         : petra cipher v3.1 for nhbank source, svn storage [cipher_nhbank-v3.1.0]"
-    echo "petra-cipher-cc       : petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_cc]"
-    echo "petra-cipher-gs       : petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_gs]"
-    echo "petra-file-cipher-gs  : petra cipher v3.2 cc source, svn storage [petra_file_cipher_v3.2_gs]"
+    echo "petra3                , petra v3.1 source, svn storage [petra]"
+    echo "petra4                , petra v4.1.0 source, svn storage [petra-v4.1.0]"
+    echo "petra5                , petra v5 for cloud, svn storage [petra-v5.0]"
+    echo "cipher-nhbank         , petra cipher v3.1 for nhbank source, svn storage [cipher_nhbank-v3.1.0]"
+    echo "petra-cipher-cc       , petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_cc]"
+    echo "petra-cipher-gs       , petra cipher v3.2 gs source, svn storage [petra_cipher_v3.2_gs]"
+    echo "petra-file-cipher-gs  , petra file cipher v3.2 gs source, svn storage [petra_file_cipher_v3.2_gs]"
     echo
 }
 
@@ -216,12 +215,12 @@ main() {
     [ $# -lt "1" ] && echo && echo "Type '${binary} help' for usage." && echo && exit 1
     [ $1 = "--version" ] && showVersion && exit 0
     [ $1 = "help" ] && showUsage && exit 0
-    [ $1 = "list" && $2 = "storage" ] && showStorage && exit 0
-    [ $1 = "list" && $2 = "branch" ] && showBranches $2 && exit 0
-    [ $1 = "list" && $2 = "tag" ] && showTags $2 && exit 0
-    [ $1 = "list" ] && showStorage && exit 0
-    [ $1 = "checkout" && $3 = "branch" ] && checkoutBranches $2 $4 $5 && exit 0
-    [ $1 = "checkout" && $3 = "tag" ] && checkoutTags $2 $4 $5 && exit 0
+    [ $1 = "list" ] && [ -z $2 ] && showStorage && exit 0
+    [ $1 = "list" ] && [ $2 = "storage" ] && showStorage && exit 0
+    [ $1 = "list" ] && [ $3 = "branch" ] && showBranches $2 && exit 0
+    [ $1 = "list" ] && [ $3 = "tag" ] && showTags $2 && exit 0
+    [ $1 = "checkout" ] && [ $3 = "branch" ] && checkoutBranches $2 $4 $5 && exit 0
+    [ $1 = "checkout" ] && [ $3 = "tag" ] && checkoutTags $2 $4 $5 && exit 0
 
     echo && echo "unknown <subcommand> '$1'" && echo && echo "Type '${binary} help' for usage." && echo && exit 1
 }
