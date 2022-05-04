@@ -51,13 +51,14 @@ showVersion() {
 showStorage() {
     echo "storage"
     echo "=========="
-    echo "petra3                , petra v3.1 source, svn storage [petra]"
-    echo "petra4                , petra v4.1.0 source, svn storage [petra-v4.1.0]"
-    echo "petra5                , petra v5 for cloud, svn storage [petra-v5.0]"
-    echo "cipher-nhbank         , petra cipher v3.1 for nhbank source, svn storage [cipher_nhbank-v3.1.0]"
-    echo "petra-cipher-cc       , petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_cc]"
-    echo "petra-cipher-gs       , petra cipher v3.2 gs source, svn storage [petra_cipher_v3.2_gs]"
-    echo "petra-file-cipher-gs  , petra file cipher v3.2 gs source, svn storage [petra_file_cipher_v3.2_gs]"
+    echo "petra3                       , petra v3.1 source, svn storage [petra]"
+    echo "petra4                       , petra v4.1.0 source, svn storage [petra-v4.1.0]"
+    echo "petra5                       , petra v5 for cloud, svn storage [petra-v5.0]"
+    echo "cipher-nhbank                , petra cipher v3.1 for nhbank source, svn storage [cipher_nhbank-v3.1.0]"
+    echo "petra-cipher-v3.2-cc         , petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_cc]"
+    echo "petra-cipher-v3.3-cc         , petra cipher v3.3 cc source, svn storage [petra_cipher_v3.3_cc]"
+    echo "petra-cipher-v3.2-gs         , petra cipher v3.2 gs source, svn storage [petra_cipher_v3.2_gs]"
+    echo "petra-file-cipher-v3.2-gs    , petra file cipher v3.2 gs source, svn storage [petra_file_cipher_v3.2_gs]"
     echo
 }
 
@@ -67,9 +68,10 @@ getStorageUrl() {
     [ ${storageName} = "petra4" ] && echo ${svnBaseUrl}/petra-v4.1.0
     [ ${storageName} = "petra5" ] && echo ${svnBaseUrl}/petra-v5.0
     [ ${storageName} = "cipher-nhbank" ] && echo ${svnBaseUrl}/cipher_nhbank-v3.1.0
-    [ ${storageName} = "petra-cipher-cc" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_cc
-    [ ${storageName} = "petra-cipher-gs" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_gs
-    [ ${storageName} = "petra-file-cipher-gs" ] && echo ${svnBaseUrl}/petra_file_cipher_v3.2_gs
+    [ ${storageName} = "petra-cipher-v3.2-cc" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_cc
+    [ ${storageName} = "petra-cipher-v3.3-cc" ] && echo ${svnBaseUrl}/petra_cipher_v3.3_cc
+    [ ${storageName} = "petra-cipher-v3.2-gs" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_gs
+    [ ${storageName} = "petra-file-cipher-v3.2-gs" ] && echo ${svnBaseUrl}/petra_file_cipher_v3.2_gs
 }
 
 showBranches() {
