@@ -16,6 +16,20 @@
 #qa_release_test              : 품질관리 테스트 소스코드
 #petra_modules                : PetraCrypto V1.0 암호모듈 인증 저장소
 
+sinsiwayRepositories="
+@repository petra @comment petra v3.1.0 source code storage @end
+@repository petra-v4.1.0 @comment [default] petra 4.1.0 source code storage @end
+@repository cipher_doc-v4.1.0 @comment petra cipher V3.2 cc documents @end
+@repository cipher_nhbank-v3.1.0 @comment NHBANK petra v3.1.0 Maintenance Source Code @end
+@repository petra_tools-v4.1.0 @comment linux or unix tools source code @end
+@repository petra-v5.0 @comment Petra v5 source code for cloud team @end
+@repository petra-v5.0-webui @comment Petra v5 UI source code for cloud team @end
+@repository cipher_ui @comment Legacy UI Source Code @end
+@repository petra_modules @comment PetraCrypto V1.0 Encrypt Module Authentication @end
+@repository petra_cipher_v3.2_cc @comment petra cipher v3.2 cc source code @end
+@repository petra_file_cipher_v3.2_gs @comment petra file cipher v3.2 gs source code @end
+"
+
 initialize() {
     binary=$(basename "$0")
     version="1.0.0"
@@ -34,7 +48,7 @@ showUsage() {
     echo "Availiable subcommand:"
     echo "  help"
     echo "  list, list storage"
-    echo "  list <storage> branch"
+    echo "  list <storage>, list <storage> branch"
     echo "  list <storage> tag"
     echo
     echo "  checkout <storage> brunch <branch> [<checkout directory>]"
@@ -49,29 +63,25 @@ showVersion() {
 }
 
 showStorage() {
-    echo "storage"
-    echo "=========="
-    echo "petra3                       , petra v3.1 source, svn storage [petra]"
-    echo "petra4                       , petra v4.1.0 source, svn storage [petra-v4.1.0]"
-    echo "petra5                       , petra v5 for cloud, svn storage [petra-v5.0]"
-    echo "cipher-nhbank                , petra cipher v3.1 for nhbank source, svn storage [cipher_nhbank-v3.1.0]"
-    echo "petra-cipher-v3.2-cc         , petra cipher v3.2 cc source, svn storage [petra_cipher_v3.2_cc]"
-    echo "petra-cipher-v3.3-cc         , petra cipher v3.3 cc source, svn storage [petra_cipher_v3.3_cc]"
-    echo "petra-cipher-v3.2-gs         , petra cipher v3.2 gs source, svn storage [petra_cipher_v3.2_gs]"
-    echo "petra-file-cipher-v3.2-gs    , petra file cipher v3.2 gs source, svn storage [petra_file_cipher_v3.2_gs]"
+    echo "=============================================================="
+    echo "< storage > :: Description ::"
+    echo "=============================================================="
+
+    local repository
+    local comments
+    for word in $sinsiwayRepositories; do
+        [ "$word" = "@repository" ] && isRepository=1 && continue
+        [ "$word" = "@comment" ] && isComments=1 && continue
+        [ "$word" = "@end" ] && echo "< ${repository} >     :: $comments ::" && isComments=0 && comments="" && continue
+        [ ! -z $isComments ] && [ $isComments -eq 1 ] && comments=$(echo $comments $word)
+        [ ! -z $isRepository ] && [ $isRepository -eq 1 ] && repository=$word && isRepository=0
+    done
     echo
 }
 
 getStorageUrl() {
     local storageName=$1
-    [ ${storageName} = "petra3" ] && echo ${svnBaseUrl}/petra
-    [ ${storageName} = "petra4" ] && echo ${svnBaseUrl}/petra-v4.1.0
-    [ ${storageName} = "petra5" ] && echo ${svnBaseUrl}/petra-v5.0
-    [ ${storageName} = "cipher-nhbank" ] && echo ${svnBaseUrl}/cipher_nhbank-v3.1.0
-    [ ${storageName} = "petra-cipher-v3.2-cc" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_cc
-    [ ${storageName} = "petra-cipher-v3.3-cc" ] && echo ${svnBaseUrl}/petra_cipher_v3.3_cc
-    [ ${storageName} = "petra-cipher-v3.2-gs" ] && echo ${svnBaseUrl}/petra_cipher_v3.2_gs
-    [ ${storageName} = "petra-file-cipher-v3.2-gs" ] && echo ${svnBaseUrl}/petra_file_cipher_v3.2_gs
+    echo ${svnBaseUrl}/$storageName
 }
 
 showBranches() {
@@ -219,6 +229,7 @@ main() {
     [ $1 = "help" ] && showUsage && exit 0
     [ $1 = "list" ] && [ -z $2 ] && showStorage && exit 0
     [ $1 = "list" ] && [ $2 = "storage" ] && showStorage && exit 0
+    [ $1 = "list" ] && [ -z $3 ] && showBranches $2 && exit 0
     [ $1 = "list" ] && [ $3 = "branch" ] && showBranches $2 && exit 0
     [ $1 = "list" ] && [ $3 = "tag" ] && showTags $2 && exit 0
     [ $1 = "checkout" ] && [ $3 = "branch" ] && checkoutBranches $2 $4 $5 && exit 0
