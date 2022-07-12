@@ -18,6 +18,7 @@
 
 sinsiwayRepositories="
 @repository petra @comment petra v3.1.0 source code storage @end
+@repository petra-v4 @comment petra 4.1.0 old version source code storage @end
 @repository petra-v4.1.0 @comment [default] petra 4.1.0 source code storage @end
 @repository cipher_doc-v4.1.0 @comment petra cipher V3.2 cc documents @end
 @repository cipher_nhbank-v3.1.0 @comment NHBANK petra v3.1.0 Maintenance Source Code @end
