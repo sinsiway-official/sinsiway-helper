@@ -49,10 +49,10 @@ showUsage() {
     echo "Availiable subcommand:"
     echo "  help"
     echo "  list, list storage"
-    echo "  list <storage>, list <storage> branch"
+    echo "  list <storage>, list <storage> branches"
     echo "  list <storage> tag"
     echo
-    echo "  checkout <storage> brunch <branch> [<checkout directory>]"
+    echo "  checkout <storage> branches <branches> [<checkout directory>]"
     echo "  checkout <storage> tag <tag> [<checkout directory>]"
     echo
 }
@@ -118,7 +118,7 @@ checkoutBranches() {
     local branchName=$2
     local checkoutDirectory=$3
     [ -z ${storageName} ] && echo "<storage> is null" && exit 1
-    [ -z ${branchName} ] && echo "<branch> is null" && exit 1
+    [ -z ${branchName} ] && echo "<branches> is null" && exit 1
     [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}-${branchName}
 
     local checkoutDirectoryPath=$(pwd)/${checkoutDirectory}
@@ -198,7 +198,7 @@ checkoutTags() {
     local tagName=$2
     local checkoutDirectory=$3
     [ -z ${storageName} ] && echo "<storage> is null" && exit 1
-    [ -z ${tagName} ] && echo "<branch> is null" && exit 1
+    [ -z ${tagName} ] && echo "<tags> is null" && exit 1
     [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}-${tagName}
 
     local storageUrl=$(getStorageUrl $1)
@@ -231,9 +231,9 @@ main() {
     [ $1 = "list" ] && [ -z $2 ] && showStorage && exit 0
     [ $1 = "list" ] && [ $2 = "storage" ] && showStorage && exit 0
     [ $1 = "list" ] && [ -z $3 ] && showBranches $2 && exit 0
-    [ $1 = "list" ] && [ $3 = "branch" ] && showBranches $2 && exit 0
+    [ $1 = "list" ] && [ $3 = "branches" ] && showBranches $2 && exit 0
     [ $1 = "list" ] && [ $3 = "tag" ] && showTags $2 && exit 0
-    [ $1 = "checkout" ] && [ $3 = "branch" ] && checkoutBranches $2 $4 $5 && exit 0
+    [ $1 = "checkout" ] && [ $3 = "branches" ] && checkoutBranches $2 $4 $5 && exit 0
     [ $1 = "checkout" ] && [ $3 = "tag" ] && checkoutTags $2 $4 $5 && exit 0
 
     echo && echo "unknown <subcommand> '$1'" && echo && echo "Type '${binary} help' for usage." && echo && exit 1
