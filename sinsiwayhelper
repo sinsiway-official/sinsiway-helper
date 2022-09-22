@@ -28,7 +28,7 @@ sinsiwayRepositories="
 @repository cipher_ui @comment Legacy UI Source Code @end
 @repository petra_modules @comment PetraCrypto V1.0 Encrypt Module Authentication @end
 @repository petra_cipher_v3.2_cc @comment petra cipher v3.2 cc source code @end
-@repository petra_file_cipher_v3.2_gs @comment petra file cipher v3.2 gs source code @end
+@repository petra_file_cipher_gs @comment petra file cipher v3.2 gs source code @end
 "
 
 initialize() {
@@ -46,14 +46,15 @@ showUsage() {
     echo "usage: ${binary} <subcommand>"
     echo "Type '${binary} --version' to see the program version"
     echo
-    echo "Availiable subcommand:"
+    echo "Availiable <subcommand>:"
     echo "  help"
-    echo "  list, list storage"
+    echo "  list, list storages"
     echo "  list <storage>, list <storage> branches"
-    echo "  list <storage> tag"
+    echo "  list <storage> tags"
     echo
-    echo "  checkout <storage> branches <branches> [<checkout directory>]"
-    echo "  checkout <storage> tag <tag> [<checkout directory>]"
+    echo "  checkout <storage> branches <branches> [<checkout directory>, default: <storage>_<branches>]"
+    echo "  checkout <storage> tags <tags> [<checkout directory>, default: <storage>_<tags>]"
+    echo "  checkout <storage> trunk  [<checkout directory>, default: <storage>_trunk]"
     echo
 }
 
@@ -99,7 +100,7 @@ showTags() {
     $svn_exe info ${storageUrl}
     echo "tags"
     echo "=========="
-    $svn_exe list ${storageUrl}/branches
+    $svn_exe list ${storageUrl}/tag
     echo
 }
 
@@ -113,13 +114,47 @@ showStroageDirectory() {
 
 }
 
+genSystemScript() {
+    env_file=env.sh
+    echo '#' >$env_file
+    echo '# env.sh' >>$env_file
+    echo '#' >>$env_file
+    echo '# Environments for dgriffin' >>$env_file
+    echo '#' >>$env_file
+    echo 'SOHA_HOME=`pwd`' >>$env_file
+    echo 'SOHA_SVC=demo' >>$env_file
+    echo 'export SOHA_HOME SOHA_SVC' >>$env_file
+    echo '' >>$env_file
+    echo 'sys_name=`uname -s`' >>$env_file
+    echo 'case ${sys_name} in' >>$env_file
+    echo '  AIX)' >>$env_file
+    echo '       LIBPATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export LIBPATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo '  HP-UX)' >>$env_file
+    echo '       SHLIB_PATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export SHLIB_PATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo '  Linux)' >>$env_file
+    echo '       LD_LIBRARY_PATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export LD_LIBRARY_PATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo '  *)' >>$env_file
+    echo '       LD_LIBRARY_PATH=$SOHA_HOME/lib' >>$env_file
+    echo '       export LD_LIBRARY_PATH' >>$env_file
+    echo '       ;;' >>$env_file
+    echo 'esac' >>$env_file
+    echo '' >>$env_file
+    chmod 755 $env_file
+}
+
 checkoutBranches() {
     local storageName=$1
     local branchName=$2
     local checkoutDirectory=$3
     [ -z ${storageName} ] && echo "<storage> is null" && exit 1
     [ -z ${branchName} ] && echo "<branches> is null" && exit 1
-    [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}-${branchName}
+    [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}_${branchName}
 
     local checkoutDirectoryPath=$(pwd)/${checkoutDirectory}
     local storageUrl=$(getStorageUrl $1)
@@ -159,50 +194,43 @@ checkoutBranches() {
 
 }
 
-genSystemScript() {
-    env_file=env.sh
-    echo '#' >$env_file
-    echo '# env.sh' >>$env_file
-    echo '#' >>$env_file
-    echo '# Environments for dgriffin' >>$env_file
-    echo '#' >>$env_file
-    echo 'SOHA_HOME=`pwd`' >>$env_file
-    echo 'SOHA_SVC=demo' >>$env_file
-    echo 'export SOHA_HOME SOHA_SVC' >>$env_file
-    echo '' >>$env_file
-    echo 'sys_name=`uname -s`' >>$env_file
-    echo 'case ${sys_name} in' >>$env_file
-    echo '  AIX)' >>$env_file
-    echo '       LIBPATH=$SOHA_HOME/lib' >>$env_file
-    echo '       export LIBPATH' >>$env_file
-    echo '       ;;' >>$env_file
-    echo '  HP-UX)' >>$env_file
-    echo '       SHLIB_PATH=$SOHA_HOME/lib' >>$env_file
-    echo '       export SHLIB_PATH' >>$env_file
-    echo '       ;;' >>$env_file
-    echo '  Linux)' >>$env_file
-    echo '       LD_LIBRARY_PATH=$SOHA_HOME/lib' >>$env_file
-    echo '       export LD_LIBRARY_PATH' >>$env_file
-    echo '       ;;' >>$env_file
-    echo '  *)' >>$env_file
-    echo '       LD_LIBRARY_PATH=$SOHA_HOME/lib' >>$env_file
-    echo '       export LD_LIBRARY_PATH' >>$env_file
-    echo '       ;;' >>$env_file
-    echo 'esac' >>$env_file
-    echo '' >>$env_file
-    chmod 755 $env_file
-}
-
 checkoutTags() {
     local storageName=$1
     local tagName=$2
     local checkoutDirectory=$3
     [ -z ${storageName} ] && echo "<storage> is null" && exit 1
     [ -z ${tagName} ] && echo "<tags> is null" && exit 1
-    [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}-${tagName}
+    [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}_${tagName}
 
     local storageUrl=$(getStorageUrl $1)
     local checkoutUrl=${storageUrl}/branches/${tagName}
+
+    ${svn_exe} info ${checkoutUrl}
+
+    [ -d "${checkoutDirectory}" ] && printf "initialize directory ${checkoutDirectory}.. " && rm -rf ${checkoutDirectory}
+    mkdir ${checkoutDirectory}
+
+    if [ -d "${checkoutDirectory}" ]; then
+        echo "[OK]"
+    else
+        echo "[Error]" && exit 1
+    fi
+
+    echo "checkout in ${checkoutDirectory}... "
+    ${svn_exe} checkout ${checkoutUrl} ${checkoutDirectory}/src
+
+    cd ${checkoutDirectory}
+    mkdir bin config install lib script
+}
+
+checkoutTrunk(){
+    local storageName=$1
+    local checkoutDirectory=$2
+    [ -z ${storageName} ] && echo "<storage> is null" && exit 1
+    [ -z ${checkoutDirectory} ] && checkoutDirectory=${storageName}_trunk
+
+    local storageUrl=$(getStorageUrl $1)
+    local checkoutUrl=${storageUrl}/trunk
 
     ${svn_exe} info ${checkoutUrl}
 
@@ -234,9 +262,12 @@ main() {
     [ $1 = "list" ] && [ $3 = "branches" ] && showBranches $2 && exit 0
     [ $1 = "list" ] && [ $3 = "tag" ] && showTags $2 && exit 0
     [ $1 = "checkout" ] && [ $3 = "branches" ] && checkoutBranches $2 $4 $5 && exit 0
-    [ $1 = "checkout" ] && [ $3 = "tag" ] && checkoutTags $2 $4 $5 && exit 0
+    [ $1 = "checkout" ] && [ $3 = "tags" ] && checkoutTags $2 $4 $5 && exit 0
+    [ $1 = "checkout" ] && [ $3 = "trunk" ] && checkoutTrunk $2 $4 && exit 0
 
     echo && echo "unknown <subcommand> '$1'" && echo && echo "Type '${binary} help' for usage." && echo && exit 1
 }
 
 main $@
+
+
